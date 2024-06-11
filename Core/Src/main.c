@@ -667,35 +667,43 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
+//만약 인터럽트 소스 채널2가 활성화 되면//
 	{
-		if (Is_First_Captured==0)
+		if (Is_First_Captured==0) //포착된 초음파 변수가 0이라면//
 		{
 			IC_Val1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+// 초음파 읽기 시작 //
 			Is_First_Captured = 1;
+// 포착된 초음파 변수 설정 //
 
 			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_2, TIM_INPUTCHANNELPOLARITY_FALLING);
+//폴링엣지에 트리거 되게 설정//
 		}
 
 		else if (Is_First_Captured==1)
 		{
 			IC_Val2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
 			__HAL_TIM_SET_COUNTER(htim, 0);
-
+//포착 카운터 초기화//
 			if (IC_Val2 > IC_Val1)
 			{
 				Difference = IC_Val2-IC_Val1;
+// 거리 값을 위한 첫번째 벨류값, 두번째 벨류값 차 계산//
 			}
 
 			else if (IC_Val1 > IC_Val2)
 			{
 				Difference = (0xffff - IC_Val1) + IC_Val2;
+//오버플로우 계산//
 			}
 
 			Distance = Difference * .034/2;
+//음속인 340ms를 곱해서 거리 환산//
 			Is_First_Captured = 0;
-
+// 다시 변수 초기화//
 
 			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_2, TIM_INPUTCHANNELPOLARITY_RISING);
+//라이징 펄스에 트리거되도록 설정//
 			__HAL_TIM_DISABLE_IT(&htim3, TIM_IT_CC2);
 		}
 	}
@@ -707,7 +715,7 @@ void gogo (){
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,SET);
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,RESET);
 }
-
+//직진//
 void dele(){
 	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,RESET);
 		HAL_GPIO_WritePin(GPIOA,GPIO_PIN_7,RESET);
@@ -715,6 +723,7 @@ void dele(){
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,RESET);
 
 }
+//정지//
 
 void rotate(){
 	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,RESET);
@@ -722,7 +731,7 @@ void rotate(){
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,RESET);
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,SET);
 }
-
+//회전//
 
 
 void HCSR04_Read (void)
@@ -733,6 +742,7 @@ void HCSR04_Read (void)
 
 	__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_CC2);
 }
+//초음파 발산 함수//
 
 /* USER CODE END 4 */
 
@@ -745,6 +755,7 @@ void HCSR04_Read (void)
 /* USER CODE END Header_DrivingTask_Init */
 void DrivingTask_Init(void *argument)
 {
+//모터부 RTOS Task//
   /* USER CODE BEGIN 5 */
 	HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
@@ -757,6 +768,7 @@ void DrivingTask_Init(void *argument)
 	  TIM4->CCR1 = 7000;
 	  	  	  TIM4->CCR2 = 7000;
             TIM1->CCR1 = 7000;
+//모터에 CCR 레지스터를 사용하여 펄스 설정//
 	  HCSR04_Read();
 sprintf(uart,"%d\r\n",Distance);
 HAL_UART_Transmit(&huart2,uart,sizeof(uart),0xFFFF);
@@ -766,8 +778,10 @@ HAL_UART_Transmit(&huart2,uart,sizeof(uart),0xFFFF);
     osDelay(1000);
     rotate();
     osDelay(3000);
+//장애물 인식 시 코드//
  }
   else if(adc[0]<2000){
+//화염 감지시 로봇이 잠시 멈춰 워터펌프모터에서 물 끌어오는 동작//
 	  dele();
 	  		HAL_GPIO_WritePin(GPIOA,GPIO_PIN_9,SET);
 	  		HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,RESET);
@@ -795,15 +809,19 @@ void flameTask_Init(void *argument)
 {
   /* USER CODE BEGIN flameTask_Init */
 	HAL_ADC_Start_DMA(&hadc1, adc, 2);
+//ADC를 위한 DMA 활성화
   /* Infinite loop */
   for(;;)
   {
 	  memset(uart,0,sizeof(uart));
+//UART버퍼 초기화// 
 	  sprintf(uart,"flame:%d\r\n",adc[0]);
 	   HAL_UART_Transmit(&huart6,uart,sizeof(uart),0xFFFF);
+//불꽃감지센서 값 블루투스 터미널 출력//
 	   memset(uart,0,sizeof(uart));
 	   sprintf(uart,"gas:%d\r\n",adc[1]);
 	   	   HAL_UART_Transmit(&huart6,uart,sizeof(uart),0xFFFF);
+//가스센서 값 블루투스 터미널 출력//
 
 	   osDelay(1000);
 
