@@ -761,7 +761,7 @@ void DrivingTask_Init(void *argument)
 sprintf(uart,"%d\r\n",Distance);
 HAL_UART_Transmit(&huart2,uart,sizeof(uart),0xFFFF);
  osDelay(100);
-  if(Distance < 20){
+  if(Distance < 12){
     dele();
     osDelay(1000);
     rotate();
