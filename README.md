@@ -13,3 +13,5 @@ STM32 TIMER CAPTURE COMPARE REGISTER 사용(PWM 펄스 폭 설정에 의한 모�
 ![순서도](https://github.com/user-attachments/assets/add52581-42aa-4383-8127-61347d9be03b)
 
 *동작영상
+
+https://github.com/user-attachments/assets/9a64e9f0-0077-4dc9-87ef-c0027258b4e0
